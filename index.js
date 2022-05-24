@@ -57,6 +57,26 @@ async function run() {
             res.send({ result, token });
         });
 
+        // to update an user information 
+        app.patch('/update-user/:email', async (req, res) => {
+            const email = req.params.email;
+            const userInfo = req.body;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: userInfo
+            };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+        // to get a particular user 
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await userCollection.findOne(query);
+            res.send(user);
+        })
+
         // to get all the tools from database 
         app.get('/tool', async (req, res) => {
             const tools = await toolCollection.find().toArray();
