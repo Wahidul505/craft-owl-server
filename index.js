@@ -105,6 +105,12 @@ async function run() {
             };
             const result = await reviewCollection.updateOne(filter, updateDoc, options);
             res.send(result);
+        });
+
+        app.get('/review', async (req, res) => {
+            const reviews = await reviewCollection.find().toArray();
+            const reverseReviews = reviews.reverse();
+            res.send(reverseReviews);
         })
 
 
