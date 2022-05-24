@@ -10,6 +10,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// middleware for verifying token 
 const verifyJWT = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -42,6 +43,51 @@ async function run() {
         const orderCollection = client.db('craft-owl').collection('orders');
         const reviewCollection = client.db('craft-owl').collection('reviews');
 
+        // middleware for verifying admin 
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterInfo = await userCollection.findOne({ email: requester });
+            const isAdmin = requesterInfo?.role === "admin";
+            if (!isAdmin) {
+                return res.status(403).send({ message: 'Forbidden Accessss' });
+            }
+            else {
+                next();
+            }
+        };
+
+        // method for admin access 
+
+        // to check if a user is admin or not 
+        app.get('/admin/user/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const userInfo = await userCollection.findOne({ email: email });
+            const isAdmin = userInfo?.role === "admin";
+            res.send({ admin: isAdmin });
+        });
+
+        // to make a user an admin 
+        app.patch('/admin/user/:email', verifyJWT, verifyAdmin, async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const updateDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            };
+            const result = await userCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+        // to get all users 
+        app.get('/user', verifyJWT, verifyAdmin, async (req, res) => {
+            const users = await userCollection.find().sort({ "email": 1 }).toArray();
+            res.send(users);
+        });
+
+
+
+
         // to insert a new user and update the previous user into database and give the user an access token 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -58,7 +104,7 @@ async function run() {
         });
 
         // to update an user information 
-        app.patch('/update-user/:email', async (req, res) => {
+        app.patch('/update-user/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const userInfo = req.body;
             const filter = { email: email };
@@ -70,7 +116,7 @@ async function run() {
         });
 
         // to get a particular user 
-        app.get('/user/:email', async (req, res) => {
+        app.get('/user/:email', verifyJWT, async (req, res) => {
             const email = req.params.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
@@ -131,7 +177,7 @@ async function run() {
             const reviews = await reviewCollection.find().toArray();
             const reverseReviews = reviews.reverse();
             res.send(reverseReviews);
-        })
+        });
 
 
     }
