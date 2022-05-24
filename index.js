@@ -40,6 +40,7 @@ async function run() {
         const toolCollection = client.db('craft-owl').collection('tools');
         const userCollection = client.db('craft-owl').collection('users');
         const orderCollection = client.db('craft-owl').collection('orders');
+        const reviewCollection = client.db('craft-owl').collection('reviews');
 
         // to insert a new user and update the previous user into database and give the user an access token 
         app.put('/user/:email', async (req, res) => {
@@ -86,10 +87,23 @@ async function run() {
             res.send(orders);
         });
 
+        // to delete an order by user 
         app.delete('/order', verifyJWT, async (req, res) => {
             const { id, email } = req.query;
             const filter = { _id: ObjectId(id), email: email };
             const result = await orderCollection.deleteOne(filter);
+            res.send(result);
+        });
+
+        // to store a review in reviewCollection 
+        app.put('/review', verifyJWT, async (req, res) => {
+            const review = req.body;
+            const filter = { email: review.email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: review
+            };
+            const result = await reviewCollection.updateOne(filter, updateDoc, options);
             res.send(result);
         })
 
