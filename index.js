@@ -153,6 +153,14 @@ async function run() {
             res.send(orders);
         });
 
+        // to get one order by the orders _id 
+        app.get('/order', verifyJWT, async (req, res) => {
+            const id = req.query.id;
+            const query = { _id: ObjectId(id) };
+            const order = await orderCollection.findOne(query);
+            res.send(order);
+        })
+
         // to delete an order by user 
         app.delete('/order', verifyJWT, async (req, res) => {
             const { id, email } = req.query;
