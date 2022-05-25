@@ -124,7 +124,7 @@ async function run() {
         // to get all the tools from database 
         app.get('/tool', async (req, res) => {
             const tools = await toolCollection.find().toArray();
-            const reverseTools = tools.reverse();
+            const reverseTools = tools.reverse().slice(0,6);
             res.send(reverseTools);
         });
 
@@ -135,6 +135,13 @@ async function run() {
             const tool = await toolCollection.findOne(query);
             res.send(tool);
         });
+
+        // to insert a new tool in db 
+        app.post('/tool', verifyJWT, async (req, res) => {
+            const toolInfo = req.body;
+            const result = await toolCollection.insertOne(toolInfo);
+            res.send(result);
+        })
 
         // to post a order into database 
         app.post('/order', verifyJWT, async (req, res) => {
