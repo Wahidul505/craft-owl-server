@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const app = express();
 require('dotenv').config();
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // middleware 
 app.use(cors());
@@ -85,9 +86,6 @@ async function run() {
             res.send(users);
         });
 
-
-
-
         // to insert a new user and update the previous user into database and give the user an access token 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -99,7 +97,7 @@ async function run() {
                 }
             };
             const result = await userCollection.updateOne(filter, updateDoc, options);
-            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' });
             res.send({ result, token });
         });
 
@@ -155,11 +153,11 @@ async function run() {
 
         // to get one order by the orders _id 
         app.get('/order', verifyJWT, async (req, res) => {
-            const id = req.query.id;
-            const query = { _id: ObjectId(id) };
+            const { id, email } = req.query;
+            const query = { _id: ObjectId(id), email: email };
             const order = await orderCollection.findOne(query);
             res.send(order);
-        })
+        });
 
         // to delete an order by user 
         app.delete('/order', verifyJWT, async (req, res) => {
@@ -168,6 +166,35 @@ async function run() {
             const result = await orderCollection.deleteOne(filter);
             res.send(result);
         });
+
+        // connecting the payment intent 
+        app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+            const { price } = req.body;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: parseFloat(price) * 100,
+                currency: "usd",
+                payment_method_types: [
+                    "card"
+                ],
+            });
+
+            res.send({ clientSecret: paymentIntent.client_secret });
+        });
+
+        // to update the order after payment 
+        app.patch('/order/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const transactionId = req.body.transactionId;
+            const filter = { _id: ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    transactionId: transactionId,
+                    status: 'pending'
+                }
+            };
+            const result = await orderCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
 
         // to store a review in reviewCollection 
         app.put('/review', verifyJWT, async (req, res) => {
