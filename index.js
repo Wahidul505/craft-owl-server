@@ -137,6 +137,12 @@ async function run() {
             res.send(tools);
         });
 
+        app.get('/cheapest-tool', async (req, res) => {
+            const cursor = toolCollection.find().sort({ price: 1 }).limit(1);
+            const cheapestTool = await cursor.toArray();
+            res.send(cheapestTool);
+        });
+
         // method for managing tools by an admin 
 
         // to delete a particular tool 
@@ -226,6 +232,7 @@ async function run() {
 
         // method for managing orders by an admin 
 
+        // to get all order by an admin 
         app.get('/admin/order', verifyJWT, verifyAdmin, async (req, res) => {
             const orders = await orderCollection.find().toArray();
             res.send(orders);
@@ -241,6 +248,14 @@ async function run() {
                 }
             };
             const result = await orderCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        });
+
+        // to delete an unpaid order by an admin 
+        app.delete('/admin/order/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id), status: 'unpaid' };
+            const result = await orderCollection.deleteOne(filter);
             res.send(result);
         })
 
