@@ -121,12 +121,25 @@ async function run() {
             res.send(user);
         })
 
-        // to get all the tools from database 
+        // to get maximum 6 tools from database 
         app.get('/tool', async (req, res) => {
-            const tools = await toolCollection.find().toArray();
-            const reverseTools = tools.reverse().slice(0,6);
-            res.send(reverseTools);
+            const tools = (await toolCollection.find().toArray()).reverse().slice(0, 6);
+            res.send(tools);
         });
+
+        // to get all the tools from database 
+        app.get('/all-tool', async (req, res) => {
+            const tools = await toolCollection.find().toArray();
+            res.send(tools);
+        });
+
+        // to delete a particular tool 
+        app.delete('/tool/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await toolCollection.deleteOne(filter);
+            res.send(result);
+        })
 
         // to get a particular tool from db 
         app.get('/tool/:id', async (req, res) => {
