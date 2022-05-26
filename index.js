@@ -57,7 +57,7 @@ async function run() {
             }
         };
 
-        // method for admin access 
+        // method for managing user by an admin 
 
         // to check if a user is admin or not 
         app.get('/admin/user/:email', verifyJWT, async (req, res) => {
@@ -85,6 +85,8 @@ async function run() {
             const users = await userCollection.find().sort({ "email": 1 }).toArray();
             res.send(users);
         });
+
+        // method for managing users by users theme selves 
 
         // to insert a new user and update the previous user into database and give the user an access token 
         app.put('/user/:email', async (req, res) => {
@@ -121,6 +123,8 @@ async function run() {
             res.send(user);
         })
 
+        // getting tools from database 
+
         // to get maximum 6 tools from database 
         app.get('/tool', async (req, res) => {
             const tools = (await toolCollection.find().toArray()).reverse().slice(0, 6);
@@ -133,13 +137,15 @@ async function run() {
             res.send(tools);
         });
 
+        // method for managing tools by an admin 
+
         // to delete a particular tool 
         app.delete('/tool/:id', verifyJWT, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) };
             const result = await toolCollection.deleteOne(filter);
             res.send(result);
-        })
+        });
 
         // to get a particular tool from db 
         app.get('/tool/:id', async (req, res) => {
@@ -155,6 +161,8 @@ async function run() {
             const result = await toolCollection.insertOne(toolInfo);
             res.send(result);
         })
+
+        // method for managing order by a user 
 
         // to post a order into database 
         app.post('/order', verifyJWT, async (req, res) => {
@@ -214,7 +222,13 @@ async function run() {
             };
             const result = await orderCollection.updateOne(filter, updateDoc);
             res.send(result);
-        })
+        });
+
+        // method for managing orders by an admin 
+
+
+
+        // method for managing review by an user 
 
         // to store a review in reviewCollection 
         app.put('/review', verifyJWT, async (req, res) => {
