@@ -128,7 +128,7 @@ async function run() {
         });
 
         // to get all the tools from database 
-        app.get('/all-tool', async (req, res) => {
+        app.get('/all-tools', async (req, res) => {
             const tools = await toolCollection.find().toArray();
             res.send(tools);
         });
