@@ -226,6 +226,23 @@ async function run() {
 
         // method for managing orders by an admin 
 
+        app.get('/admin/order', verifyJWT, verifyAdmin, async (req, res) => {
+            const orders = await orderCollection.find().toArray();
+            res.send(orders);
+        });
+
+        // updating an order from paid to shipped by an admin
+        app.patch('/admin/order/:id', verifyJWT, verifyAdmin, async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id), status: 'pending' };
+            const updateDoc = {
+                $set: {
+                    status: 'shipped'
+                }
+            };
+            const result = await orderCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
 
 
         // method for managing review by an user 
