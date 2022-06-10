@@ -10,6 +10,11 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 // middleware 
 app.use(cors());
 app.use(express.json());
+app.use(
+    cors({
+      origin: "*",
+    })
+  );
 
 // middleware for verifying token 
 const verifyJWT = (req, res, next) => {
